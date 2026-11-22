@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '../auth/AuthContext'
@@ -37,10 +38,13 @@ function renderPage() {
 }
 
 describe('LobbyPage', () => {
-  it('展示当前用户名与退出入口', async () => {
+  it('展示当前用户名，用户菜单中有退出入口', async () => {
+    const user = userEvent.setup()
     renderPage()
     expect(await screen.findByText('测试用户')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '退出登录' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /测试用户/ }))
+    expect(screen.getByRole('menuitem', { name: '退出登录' })).toBeInTheDocument()
+    expect(screen.getByText('用户 ID')).toBeInTheDocument()
   })
 
   it('展示已加入的群组卡片与统计', async () => {

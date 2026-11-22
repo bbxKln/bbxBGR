@@ -1,17 +1,16 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext'
 import { CreateGroupModal } from '../components/CreateGroupModal'
 import { DiceMark } from '../components/DiceMark'
 import { GroupCard } from '../components/GroupCard'
 import { JoinGroupModal } from '../components/JoinGroupModal'
-import { Button, Spinner } from '../components/ui'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { UserMenu } from '../components/UserMenu'
+import { Button, Spinner } from '../components/ui'
 import { api } from '../lib/api'
 
 export function LobbyPage() {
-  const { user, logout } = useAuth()
   const [showCreate, setShowCreate] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
   const groupsQuery = useQuery({ queryKey: ['groups'], queryFn: () => api.listGroups() })
@@ -25,12 +24,9 @@ export function LobbyPage() {
           <DiceMark className="h-7 w-7" />
           <span className="text-base font-semibold text-ink">开桌</span>
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted">{user?.username}</span>
+        <div className="flex items-center gap-1.5">
           <ThemeToggle />
-          <Button variant="ghost" className="h-8 px-2 text-sm" onClick={() => void logout()}>
-            退出登录
-          </Button>
+          <UserMenu />
         </div>
       </header>
 

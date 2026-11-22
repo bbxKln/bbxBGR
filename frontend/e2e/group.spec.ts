@@ -15,6 +15,12 @@ async function register(page: Page, username: string) {
   await expect(page).toHaveURL(/\/$/)
 }
 
+/** 退出登录：先打开右上角用户菜单 */
+async function logout(page: Page, username: string) {
+  await page.locator('header').getByRole('button', { name: new RegExp(username) }).click()
+  await page.getByRole('menuitem', { name: '退出登录' }).click()
+}
+
 test.describe.configure({ mode: 'serial' })
 
 test('M2 全流程：桌游/玩家/场次/评论/权限/软删除', async ({ page }) => {
@@ -80,7 +86,7 @@ test('M2 全流程：桌游/玩家/场次/评论/权限/软删除', async ({ pag
   await page.getByRole('button', { name: '关闭' }).click()
 
   // ===== B 注册并凭 ID 加入 =====
-  await page.getByRole('button', { name: '退出登录' }).click()
+  await logout(page, nameA)
   await expect(page).toHaveURL(/\/login$/)
   await register(page, nameB)
   await page.locator('main').getByRole('button', { name: '按群组 ID 加入' }).click()
@@ -107,17 +113,17 @@ test('M2 全流程：桌游/玩家/场次/评论/权限/软删除', async ({ pag
   await formB.getByRole('button', { name: nameB }).nth(1).click() // 获胜：B
   await page.getByLabel('MVP').selectOption({ label: nameB })
   await page.getByRole('button', { name: '保存', exact: true }).click()
-  // 先等表单弹窗关闭，再等 B 的场次卡片出现在列表里（避免点到 A 的场次）
+  // 先等表单弹窗关闭，再等 B 的场次卡片出现（用卡片独有的「赢：xxx」文案定位）
   await expect(page.getByRole('dialog')).toBeHidden()
-  await expect(page.getByRole('button', { name: new RegExp(nameB) })).toBeVisible()
-  await page.getByRole('button', { name: new RegExp(nameB) }).click()
+  await expect(page.getByText(new RegExp(`赢：${nameB}`))).toBeVisible()
+  await page.getByText(new RegExp(`赢：${nameB}`)).click()
   await page.getByLabel('我的评论').fill('B 的评论')
   await page.getByRole('button', { name: '保存评论' }).click()
   await expect(page.getByText('B 的评论')).toBeVisible()
   await page.getByRole('button', { name: '关闭' }).click()
 
   // ===== A 回来：删除 B 的评论、给 B 设协管、软删除桌游 =====
-  await page.getByRole('button', { name: '退出登录' }).click()
+  await logout(page, nameB)
   await expect(page).toHaveURL(/\/login$/)
   await page.goto('/login')
   await waitForPage(page, '开桌')

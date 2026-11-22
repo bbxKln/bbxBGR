@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext'
+import { ThemeToggle } from '../components/ThemeToggle'
+import { UserMenu } from '../components/UserMenu'
 import { api, ROLE_LABELS } from '../lib/api'
 import type { GroupRole } from '../types'
-import { Button, Spinner } from '../components/ui'
+import { Spinner } from '../components/ui'
 import { GamesPanel } from '../features/games/GamesPanel'
 import { PlayersPanel } from '../features/players/PlayersPanel'
 import { SessionsPanel } from '../features/sessions/SessionsPanel'
@@ -31,7 +32,6 @@ function RoleBadge({ role }: { role: GroupRole }) {
 
 export function GroupPage() {
   const { groupId = '' } = useParams()
-  const { user, logout } = useAuth()
   const [tab, setTab] = useState<Tab>('sessions')
   const groupQuery = useQuery({ queryKey: ['group', groupId], queryFn: () => api.getGroup(groupId) })
 
@@ -73,11 +73,9 @@ export function GroupPage() {
             <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted">{user?.username}</span>
-          <Button variant="ghost" className="h-8 px-2 text-sm" onClick={() => void logout()}>
-            退出登录
-          </Button>
+        <div className="flex items-center gap-1.5">
+          <ThemeToggle />
+          <UserMenu />
         </div>
       </header>
 

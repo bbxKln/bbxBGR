@@ -10,6 +10,12 @@ async function waitForPage(page: Page, heading: string) {
   await expect(page.getByRole('heading', { name: heading })).toBeVisible()
 }
 
+/** 退出登录：先打开右上角用户菜单 */
+async function logout(page: Page, username: string) {
+  await page.locator('header').getByRole('button', { name: new RegExp(username) }).click()
+  await page.getByRole('menuitem', { name: '退出登录' }).click()
+}
+
 test.describe.configure({ mode: 'serial' })
 
 test('注册 → 创建群组 → 换账号凭群组 ID 加入', async ({ page }) => {
@@ -41,7 +47,7 @@ test('注册 → 创建群组 → 换账号凭群组 ID 加入', async ({ page }
   await expect(page.getByText('周五桌游夜')).toBeVisible()
 
   // 退出，注册第二个用户
-  await page.getByRole('button', { name: '退出登录' }).click()
+  await logout(page, nameA)
   await expect(page).toHaveURL(/\/login$/)
   await waitForPage(page, '开桌')
   await page.getByRole('link', { name: '注册一个' }).click()
@@ -78,7 +84,7 @@ test('重复用户名与错误密码被拒绝', async ({ page }) => {
   await expect(page).toHaveURL(/\/$/)
 
   // 退出后用同一用户名注册 → 报错
-  await page.getByRole('button', { name: '退出登录' }).click()
+  await logout(page, name)
   await expect(page).toHaveURL(/\/login$/)
   await page.goto('/register')
   await waitForPage(page, '注册开桌')

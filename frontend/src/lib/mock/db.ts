@@ -124,6 +124,19 @@ export function findUserById(userId: string): User | null {
   return row ? toUser(row) : null
 }
 
+export function verifyPassword(userId: string, password: string): boolean {
+  const row = loadDb().users.find((u) => u.id === userId)
+  return row?.password === password
+}
+
+export function updatePassword(userId: string, newPassword: string): void {
+  const db = loadDb()
+  const row = db.users.find((u) => u.id === userId)
+  if (!row) throw new Error('用户不存在')
+  row.password = newPassword
+  saveDb(db)
+}
+
 export function findUserByUsername(username: string): MockUserRow | undefined {
   return loadDb().users.find((u) => u.username === username)
 }

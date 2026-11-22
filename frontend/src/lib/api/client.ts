@@ -31,6 +31,8 @@ export interface Api {
   register(input: { username: string; password: string; email?: string }): Promise<User>
   login(input: { username: string; password: string }): Promise<User>
   logout(): Promise<void>
+  /** 修改当前用户的密码（需验证当前密码） */
+  changePassword(input: { currentPassword: string; newPassword: string }): Promise<void>
 
   listGroups(): Promise<GroupSummary[]>
   createGroup(input: { name: string }): Promise<GroupDetail>

@@ -126,6 +126,21 @@ export const mockApi: Api = {
     db.setSessionUserId(null)
   },
 
+  async changePassword(input) {
+    await delay()
+    const userId = requireUser()
+    if (input.newPassword.length < MIN_PASSWORD_LENGTH) {
+      throw new ApiError(`新密码至少 ${MIN_PASSWORD_LENGTH} 位`, 'INVALID_PASSWORD')
+    }
+    if (input.newPassword === input.currentPassword) {
+      throw new ApiError('新密码不能与当前密码相同', 'INVALID_PASSWORD')
+    }
+    if (!db.verifyPassword(userId, input.currentPassword)) {
+      throw new ApiError('当前密码不正确', 'INVALID_CREDENTIALS')
+    }
+    db.updatePassword(userId, input.newPassword)
+  },
+
   async listGroups(): Promise<GroupSummary[]> {
     await delay()
     return db.listGroupsForUser(requireUser())

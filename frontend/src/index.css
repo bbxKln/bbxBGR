@@ -17,8 +17,22 @@
   --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 
+/* 显式选择深色 */
+:root[data-theme='dark'] {
+  --color-bg: #10151c;
+  --color-surface: #171e28;
+  --color-line: #27303d;
+  --color-ink: #e7ecf3;
+  --color-muted: #8a94a6;
+  --color-primary: #5b8def;
+  --color-primary-hover: #6e9cf2;
+  --color-win: #3fbf7f;
+  --color-danger: #e06a6a;
+}
+
+/* 未显式选择浅色时跟随系统（深色系统） */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --color-bg: #10151c;
     --color-surface: #171e28;
     --color-line: #27303d;

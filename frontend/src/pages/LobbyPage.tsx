@@ -7,6 +7,7 @@ import { DiceMark } from '../components/DiceMark'
 import { GroupCard } from '../components/GroupCard'
 import { JoinGroupModal } from '../components/JoinGroupModal'
 import { Button, Spinner } from '../components/ui'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { api } from '../lib/api'
 
 export function LobbyPage() {
@@ -26,6 +27,7 @@ export function LobbyPage() {
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted">{user?.username}</span>
+          <ThemeToggle />
           <Button variant="ghost" className="h-8 px-2 text-sm" onClick={() => void logout()}>
             退出登录
           </Button>

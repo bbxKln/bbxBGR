@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { DiceMark } from '../components/DiceMark'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { Alert, Button, Input } from '../components/ui'
 
 export function LoginPage() {
@@ -34,7 +35,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center p-4">
+    <div className="relative flex min-h-full items-center justify-center p-4">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           <DiceMark className="h-11 w-11" />

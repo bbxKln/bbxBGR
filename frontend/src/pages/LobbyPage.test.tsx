@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '../auth/AuthContext'
+import { ThemeProvider } from '../theme/ThemeContext'
 import { LobbyPage } from './LobbyPage'
 
 vi.mock('../lib/api', () => ({
@@ -24,11 +25,13 @@ function renderPage() {
   const queryClient = new QueryClient()
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <AuthProvider>
-          <LobbyPage />
-        </AuthProvider>
-      </MemoryRouter>
+      <ThemeProvider>
+        <MemoryRouter>
+          <AuthProvider>
+            <LobbyPage />
+          </AuthProvider>
+        </MemoryRouter>
+      </ThemeProvider>
     </QueryClientProvider>,
   )
 }

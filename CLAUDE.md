@@ -40,7 +40,7 @@
 - 前端：React 19 + Vite + TypeScript + Tailwind CSS；UI 全中文；移动优先响应式（后期可选 PWA）
 - 后端：Cloudflare Workers + Hono + D1 + KV；API 统一 `/api/v1/*` 前缀，为未来公开 API 留空间（未来才创建，现在只预留设计空间）
 - 部署：前端 Cloudflare Pages，后端独立 Worker；测试链接用 *.pages.dev
-- 视觉：现代简约风（冷色、克制、商务感）+ 深色模式（跟随系统）
+- 视觉：现代简约风（冷色、克制、商务感）+ 深浅色可手动切换（默认跟随系统，选择持久化）
 - 删除策略：软删除，历史场次保留引用并显示原名称
 - 测试：前端 Vitest + React Testing Library 单测、Playwright E2E；后端 Vitest；里程碑结束测试全绿才汇报
 - GitHub：公开仓库
@@ -49,5 +49,6 @@
 - 原始 CLAUDE.md 内容保存在 claude_memory/ 内
 - 里程碑定义见「里程碑.md」：每个里程碑结束向用户汇报 + 提供测试链接，只有用户同意后才进入下一个
 - 里程碑先前端（M1–M3，mock 数据），再后端（M4 联调），最后测试补全与部署（M5）
+- 先在本地环境搭建并测试通过，Cloudflare 部署是最后一步，不在开发中期上线
 - 开发过程中要有测试用例
 - 使用 grill-me 时如需用户确认，问题罗列在 claude_memory/问卷-待确认问题.md

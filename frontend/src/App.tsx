@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import { Spinner } from './components/ui'
-import { GroupPlaceholderPage } from './pages/GroupPlaceholderPage'
+import { GroupPage } from './pages/GroupPage'
 import { LobbyPage } from './pages/LobbyPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -38,7 +38,7 @@ export default function App() {
         path="/groups/:groupId"
         element={
           <Protected>
-            <GroupPlaceholderPage />
+            <GroupPage />
           </Protected>
         }
       />

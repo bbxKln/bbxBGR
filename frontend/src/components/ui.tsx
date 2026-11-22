@@ -3,6 +3,7 @@ import {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
+  type TextareaHTMLAttributes,
 } from 'react'
 
 export function Spinner({ className = 'h-4 w-4' }: { className?: string }) {
@@ -82,6 +83,98 @@ export function Alert({ children }: { children: ReactNode }) {
   )
 }
 
+export function Textarea({
+  label,
+  hint,
+  error,
+  className = '',
+  ...rest
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string; hint?: string; error?: string }) {
+  const inputId = rest.id ?? rest.name
+  return (
+    <div className={className}>
+      {label && (
+        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-ink">
+          {label}
+        </label>
+      )}
+      <textarea
+        id={inputId}
+        className={`w-full rounded-lg border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+          error ? 'border-danger' : 'border-line'
+        }`}
+        {...rest}
+      />
+      {error ? (
+        <p className="mt-1 text-xs text-danger">{error}</p>
+      ) : hint ? (
+        <p className="mt-1 text-xs text-muted">{hint}</p>
+      ) : null}
+    </div>
+  )
+}
+
+/** 可勾选的标签块（多选参与/获胜玩家等） */
+export function ChipToggle({
+  selected,
+  tone = 'primary',
+  onClick,
+  children,
+}: {
+  selected: boolean
+  tone?: 'primary' | 'win'
+  onClick: () => void
+  children: ReactNode
+}) {
+  const selectedStyles =
+    tone === 'win'
+      ? 'border-win bg-win/10 text-win'
+      : 'border-primary bg-primary/10 text-primary'
+  const unselectedStyles = 'border-line text-muted hover:border-primary/50 hover:text-ink'
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${selected ? selectedStyles : unselectedStyles}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+export function ConfirmModal({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmLabel = '确认删除',
+  loading = false,
+}: {
+  open: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  message: ReactNode
+  confirmLabel?: string
+  loading?: boolean
+}) {
+  return (
+    <Modal open={open} onClose={onClose} title={title}>
+      <p className="text-sm text-muted">{message}</p>
+      <div className="mt-5 flex gap-3">
+        <Button variant="outline" className="flex-1" onClick={onClose}>
+          取消
+        </Button>
+        <Button variant="danger" className="flex-1" loading={loading} onClick={onConfirm}>
+          {confirmLabel}
+        </Button>
+      </div>
+    </Modal>
+  )
+}
+
 export function Modal({
   open,
   onClose,
@@ -112,7 +205,19 @@ export function Modal({
     >
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
       <div className="relative w-full max-w-md rounded-xl border border-line bg-surface p-5 shadow-lg">
-        <h2 className="mb-4 text-base font-semibold text-ink">{title}</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="min-w-0 truncate text-base font-semibold text-ink">{title}</h2>
+          <button
+            type="button"
+            aria-label="关闭"
+            onClick={onClose}
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg hover:text-ink"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
         {children}
       </div>
     </div>

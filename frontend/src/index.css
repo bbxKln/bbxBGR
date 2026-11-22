@@ -45,6 +45,43 @@
   }
 }
 
+/* ---------- 图表色板（dataviz 验证通过：浅色表面 #f6f7f9 / 深色表面 #10151c） ---------- */
+:root {
+  --viz-series-1: #2a78d6;
+  --viz-series-2: #eb6834;
+  --viz-series-3: #1baf7a;
+  --viz-series-4: #eda100;
+  --viz-series-5: #e87ba4;
+  --viz-series-6: #008300;
+  --viz-series-7: #6250d6;
+  --viz-series-8: #e34948;
+  --viz-cell-tint: #cde2fb;
+}
+:root[data-theme='dark'] {
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+  --viz-series-3: #199e70;
+  --viz-series-4: #c98500;
+  --viz-series-5: #d55181;
+  --viz-series-6: #0ca30c;
+  --viz-series-7: #9085e9;
+  --viz-series-8: #e66767;
+  --viz-cell-tint: #3987e5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --viz-series-1: #3987e5;
+    --viz-series-2: #d95926;
+    --viz-series-3: #199e70;
+    --viz-series-4: #c98500;
+    --viz-series-5: #d55181;
+    --viz-series-6: #0ca30c;
+    --viz-series-7: #9085e9;
+    --viz-series-8: #e66767;
+    --viz-cell-tint: #3987e5;
+  }
+}
+
 html,
 body,
 #root {

@@ -6,16 +6,18 @@ import { UserMenu } from '../components/UserMenu'
 import { api, ROLE_LABELS } from '../lib/api'
 import type { GroupRole } from '../types'
 import { Spinner } from '../components/ui'
+import { AnalysisPanel } from '../features/analysis/AnalysisPanel'
 import { GamesPanel } from '../features/games/GamesPanel'
 import { PlayersPanel } from '../features/players/PlayersPanel'
 import { SessionsPanel } from '../features/sessions/SessionsPanel'
 
-type Tab = 'sessions' | 'games' | 'players'
+type Tab = 'sessions' | 'games' | 'players' | 'analysis'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'sessions', label: '场次' },
   { key: 'games', label: '桌游' },
   { key: 'players', label: '玩家' },
+  { key: 'analysis', label: '分析' },
 ]
 
 function RoleBadge({ role }: { role: GroupRole }) {
@@ -109,6 +111,7 @@ export function GroupPage() {
           {tab === 'sessions' && <SessionsPanel group={group} />}
           {tab === 'games' && <GamesPanel group={group} />}
           {tab === 'players' && <PlayersPanel group={group} />}
+          {tab === 'analysis' && <AnalysisPanel group={group} />}
         </div>
       </div>
     </div>

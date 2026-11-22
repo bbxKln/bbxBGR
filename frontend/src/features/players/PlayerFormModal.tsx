@@ -48,6 +48,7 @@ export function PlayerFormModal({
           label="姓名"
           name="player-name"
           placeholder="例如：阿伦"
+          hint={player?.userId ? '这是该玩家在本群组内的昵称，修改不影响其账号用户名' : undefined}
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={MAX_PLAYER_NAME_LENGTH}

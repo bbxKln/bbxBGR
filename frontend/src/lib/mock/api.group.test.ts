@@ -87,6 +87,39 @@ describe('群组内功能（mock API）', () => {
       })
     })
 
+    it('修改已关联玩家的昵称不影响账号用户名（昵称仅群组内有效）', async () => {
+      const { group } = await setupGroup()
+      await mockApi.logout()
+      const userB = await mockApi.register({ username: '小乙', password: 'secret456' })
+      await mockApi.joinGroup(group.groupId)
+      const bPlayer = (await mockApi.listPlayers(group.id)).find((p) => p.userId === userB.id)!
+
+      await mockApi.logout()
+      await mockApi.login({ username: '阿伦', password: 'secret123' })
+      await mockApi.updatePlayer(group.id, bPlayer.id, { name: '桌子王' })
+
+      // 昵称变了，但账号用户名不变
+      const updated = (await mockApi.listPlayers(group.id)).find((p) => p.id === bPlayer.id)!
+      expect(updated.name).toBe('桌子王')
+      expect(updated.linkedUsername).toBe('小乙')
+      await mockApi.logout()
+      const me = await mockApi.login({ username: '小乙', password: 'secret456' })
+      expect(me.username).toBe('小乙')
+
+      // 场次展示用的是昵称
+      await mockApi.logout()
+      await mockApi.login({ username: '阿伦', password: 'secret123' })
+      const game = await mockApi.createGame(group.id, { name: '卡坦岛', tags: [] })
+      const players = await mockApi.listPlayers(group.id)
+      const session = await mockApi.createSession(group.id, {
+        gameId: game.id,
+        playedAt: '2026-11-22',
+        participantIds: [bPlayer.id, players.find((p) => p.id !== bPlayer.id)!.id],
+        winnerIds: [bPlayer.id],
+      })
+      expect(session.participants.find((p) => p.playerId === bPlayer.id)?.name).toBe('桌子王')
+    })
+
     it('admin 可分配/取消协管；成员无权分配；不能改管理员角色', async () => {
       const { group } = await setupGroup()
       // 第二个用户加入

@@ -63,35 +63,64 @@ test('M3 分析页：胜率计算、趋势、矩阵与筛选', async ({ page }) 
   // ===== 分析页 =====
   await page.getByRole('tab', { name: '分析' }).click()
 
-  // 汇总：阿伦 2场1胜50%，无名 2场2胜100%
+  // 汇总（胜率降序）：无名 100% 排在阿伦 50% 前面
   const summaryTable = page.locator('table').first()
+  const summaryRows = summaryTable.locator('tbody tr')
+  await expect(summaryRows).toHaveCount(2)
+  await expect(summaryRows.nth(0)).toContainText('无名')
+  await expect(summaryRows.nth(0).getByText('100%', { exact: true })).toBeVisible()
   const rowA = summaryTable.locator('tr').filter({ hasText: nameA })
   await expect(rowA.getByText('50%', { exact: true })).toBeVisible()
-  const rowWu = summaryTable.locator('tr').filter({ hasText: '无名' })
-  await expect(rowWu.getByText('100%', { exact: true })).toBeVisible()
 
   // 趋势折线图渲染，含两个月份刻度
   await expect(page.getByRole('img', { name: '按月胜率趋势折线图' })).toBeVisible()
   await expect(page.locator('svg').filter({ hasText: '1月' })).toHaveCount(1)
   await expect(page.locator('svg').filter({ hasText: '2月' })).toHaveCount(1)
 
-  // 矩阵：点选无名 → 各桌游横条
-  await page.getByRole('button', { name: '无名' }).click()
-  await expect(page.getByText('无名 的各桌游胜率', { exact: false })).toBeVisible()
-  await expect(page.getByText('100% · 1/1').first()).toBeVisible()
-
   // 筛选：只看卡坦岛
   await page.getByRole('button', { name: /桌游/ }).click()
   await page.getByRole('checkbox', { name: '卡坦岛' }).click()
   await page.keyboard.press('Escape') // 关闭下拉
   await expect(rowA.getByText('100%', { exact: true })).toBeVisible()
-  // 折线图 y 轴含「50%」刻度，因此只断言汇总表与矩阵
+  // 折线图 y 轴含「50%」刻度，因此只断言汇总表
   await expect(summaryTable.getByText('50%', { exact: true })).toHaveCount(0)
-  const matrixTable = page.locator('table').nth(1)
-  await expect(matrixTable.getByText('阿瓦隆', { exact: true })).toHaveCount(0)
 
   // 重置筛选
   await page.getByRole('button', { name: '重置筛选' }).click()
   await expect(rowA.getByText('50%', { exact: true })).toBeVisible()
-  await expect(matrixTable.getByText('阿瓦隆', { exact: true })).toBeVisible()
+
+  // ===== 桌游页：展开卡坦岛看各玩家胜率 =====
+  // S1 卡坦岛双赢 → 阿伦 100%（1/1）、无名 100%（1/1），并列按玩家列表顺序（阿伦在前）
+  await page.getByRole('tab', { name: '桌游' }).click()
+  await page.getByRole('button', { name: '查看卡坦岛胜率' }).click()
+  const gameCard = page.locator('li').filter({ hasText: '卡坦岛' })
+  await expect(gameCard.getByText('各玩家胜率')).toBeVisible()
+  const gameBars = gameCard.getByRole('listitem')
+  await expect(gameBars).toHaveCount(2)
+  await expect(gameBars.nth(0)).toContainText(nameA)
+  await expect(gameBars.nth(0)).toContainText('100% · 1/1')
+  await expect(gameBars.nth(1)).toContainText('无名')
+  await expect(gameBars.nth(1)).toContainText('100% · 1/1')
+
+  // ===== 玩家页：展开无名看各桌游胜率（降序）=====
+  // 无名两局全胜 → 阿瓦隆 100%（1/1）、卡坦岛 100%（1/1），并列按场次排序（阿瓦隆在前）
+  await page.getByRole('tab', { name: '玩家' }).click()
+  await page.getByRole('button', { name: '查看无名胜率' }).click()
+  const playerCard = page.locator('li').filter({ hasText: '账号' }).filter({ hasText: '无名' })
+  await expect(playerCard.getByText('各桌游胜率')).toBeVisible()
+  const playerBars = playerCard.getByRole('listitem')
+  await expect(playerBars).toHaveCount(2)
+  await expect(playerBars.nth(0)).toContainText('阿瓦隆')
+  await expect(playerBars.nth(0)).toContainText('100% · 1/1')
+  await expect(playerBars.nth(1)).toContainText('卡坦岛')
+  await expect(playerBars.nth(1)).toContainText('100% · 1/1')
+
+  // ===== 玩家页：展开阿伦看各桌游胜率（降序：卡坦岛 100% > 阿瓦隆 0%）=====
+  await page.getByRole('button', { name: `查看${nameA}胜率` }).click()
+  const cardA = page.locator('li').filter({ hasText: '账号' }).filter({ hasText: nameA })
+  const barsA = cardA.getByRole('listitem')
+  await expect(barsA.nth(0)).toContainText('卡坦岛')
+  await expect(barsA.nth(0)).toContainText('100% · 1/1')
+  await expect(barsA.nth(1)).toContainText('阿瓦隆')
+  await expect(barsA.nth(1)).toContainText('0% · 0/1')
 })

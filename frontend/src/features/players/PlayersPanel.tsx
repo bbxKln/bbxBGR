@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { Button, ConfirmModal, Spinner } from '../../components/ui'
 import { api, ROLE_LABELS } from '../../lib/api'
+import { perPlayerPerGame } from '../../lib/analysis'
 import type { GroupDetail, Player } from '../../types'
+import { WinRateBars } from '../analysis/WinRateBars'
 import { LinkPlayerModal } from './LinkPlayerModal'
 import { PlayerFormModal } from './PlayerFormModal'
+
+const EMPTY_SESSIONS: never[] = []
+const EMPTY_GAMES: never[] = []
 
 export function PlayersPanel({ group }: { group: GroupDetail }) {
   const isManager = group.role === 'admin' || group.role === 'admin_user'
@@ -15,6 +20,20 @@ export function PlayersPanel({ group }: { group: GroupDetail }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const playersQuery = useQuery({ queryKey: ['players', group.id], queryFn: () => api.listPlayers(group.id) })
+  const sessionsQuery = useQuery({ queryKey: ['sessions', group.id], queryFn: () => api.listSessions(group.id) })
+  const gamesQuery = useQuery({ queryKey: ['games', group.id], queryFn: () => api.listGames(group.id) })
+  const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null)
+
+  const sessions = sessionsQuery.data ?? EMPTY_SESSIONS
+  const games = gamesQuery.data ?? EMPTY_GAMES
+
+  const statsByPlayer = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof perPlayerPerGame>>()
+    for (const player of playersQuery.data ?? EMPTY_GAMES) {
+      map.set(player.id, perPlayerPerGame(sessions, games, player.id))
+    }
+    return map
+  }, [playersQuery.data, sessions, games])
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Player | null>(null)
@@ -107,59 +126,93 @@ export function PlayersPanel({ group }: { group: GroupDetail }) {
         <ul className="space-y-2">
           {players.map((player) => {
             const isMe = player.userId === user?.id
+            const expanded = expandedPlayerId === player.id
             return (
-              <li key={player.id} className="flex items-center gap-3 rounded-lg border border-line bg-surface p-3.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bg text-sm font-semibold text-primary" aria-hidden="true">
-                  {player.name.slice(0, 1)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 text-sm font-medium text-ink">
-                    <span className="truncate">{player.name}</span>
-                    {isMe && <span className="shrink-0 rounded-md bg-bg px-1.5 py-0.5 text-xs text-muted">我</span>}
-                    {player.role === 'admin' && (
-                      <span className="shrink-0 rounded-md bg-primary/10 px-1.5 py-0.5 text-xs text-primary">{ROLE_LABELS.admin}</span>
-                    )}
-                    {player.role === 'admin_user' && (
-                      <span className="shrink-0 rounded-md bg-bg px-1.5 py-0.5 text-xs text-muted">{ROLE_LABELS.admin_user}</span>
-                    )}
-                  </p>
-                  <p className="mt-0.5 truncate text-xs text-muted">
-                    {player.linkedUsername ? `账号：${player.linkedUsername}` : '未关联账号'}
-                  </p>
-                </div>
-                {isManager && (
+              <li key={player.id} className="rounded-lg border border-line bg-surface p-3.5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bg text-sm font-semibold text-primary" aria-hidden="true">
+                    {player.name.slice(0, 1)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-2 text-sm font-medium text-ink">
+                      <span className="truncate">{player.name}</span>
+                      {isMe && <span className="shrink-0 rounded-md bg-bg px-1.5 py-0.5 text-xs text-muted">我</span>}
+                      {player.role === 'admin' && (
+                        <span className="shrink-0 rounded-md bg-primary/10 px-1.5 py-0.5 text-xs text-primary">{ROLE_LABELS.admin}</span>
+                      )}
+                      {player.role === 'admin_user' && (
+                        <span className="shrink-0 rounded-md bg-bg px-1.5 py-0.5 text-xs text-muted">{ROLE_LABELS.admin_user}</span>
+                      )}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-muted">
+                      {player.linkedUsername ? `账号：${player.linkedUsername}` : '未关联账号'}
+                    </p>
+                  </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <Button variant="ghost" className="h-8 px-2 text-xs" onClick={() => { setEditing(player); setFormOpen(true) }}>
-                      编辑
-                    </Button>
-                    <Button variant="ghost" className="h-8 px-2 text-xs" onClick={() => setLinking(player)}>
-                      关联账号
-                    </Button>
-                    {isAdmin && player.role === 'member' && player.userId && (
-                      <Button
-                        variant="ghost"
-                        className="h-8 px-2 text-xs"
-                        loading={roleMutation.isPending}
-                        onClick={() => roleMutation.mutate({ playerId: player.id, role: 'admin_user' })}
+                    {isManager && (
+                      <>
+                        <Button variant="ghost" className="h-8 px-2 text-xs" onClick={() => { setEditing(player); setFormOpen(true) }}>
+                          编辑
+                        </Button>
+                        <Button variant="ghost" className="h-8 px-2 text-xs" onClick={() => setLinking(player)}>
+                          关联账号
+                        </Button>
+                        {isAdmin && player.role === 'member' && player.userId && (
+                          <Button
+                            variant="ghost"
+                            className="h-8 px-2 text-xs"
+                            loading={roleMutation.isPending}
+                            onClick={() => roleMutation.mutate({ playerId: player.id, role: 'admin_user' })}
+                          >
+                            设为协管
+                          </Button>
+                        )}
+                        {isAdmin && player.role === 'admin_user' && (
+                          <Button
+                            variant="ghost"
+                            className="h-8 px-2 text-xs"
+                            loading={roleMutation.isPending}
+                            onClick={() => roleMutation.mutate({ playerId: player.id, role: 'member' })}
+                          >
+                            取消协管
+                          </Button>
+                        )}
+                        {(isAdmin || !player.userId) && (
+                          <Button variant="ghost" className="h-8 px-2 text-xs text-danger" onClick={() => setRemoving(player)}>
+                            {player.userId ? '移除' : '删除'}
+                          </Button>
+                        )}
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`查看${player.name}胜率`}
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedPlayerId(expanded ? null : player.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg hover:text-ink"
+                    >
+                      <svg
+                        className={`h-4 w-4 transition-transform ${expanded ? 'rotate-90' : ''}`}
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        aria-hidden="true"
                       >
-                        设为协管
-                      </Button>
-                    )}
-                    {isAdmin && player.role === 'admin_user' && (
-                      <Button
-                        variant="ghost"
-                        className="h-8 px-2 text-xs"
-                        loading={roleMutation.isPending}
-                        onClick={() => roleMutation.mutate({ playerId: player.id, role: 'member' })}
-                      >
-                        取消协管
-                      </Button>
-                    )}
-                    {(isAdmin || !player.userId) && (
-                      <Button variant="ghost" className="h-8 px-2 text-xs text-danger" onClick={() => setRemoving(player)}>
-                        {player.userId ? '移除' : '删除'}
-                      </Button>
-                    )}
+                        <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                {expanded && (
+                  <div className="mt-3 border-t border-line pt-3">
+                    <p className="mb-2 text-xs font-medium text-muted">各桌游胜率</p>
+                    <WinRateBars
+                      rows={(statsByPlayer.get(player.id) ?? []).map((row) => ({
+                        name: row.gameName,
+                        winRate: row.winRate,
+                        wins: row.wins,
+                        played: row.played,
+                      }))}
+                    />
                   </div>
                 )}
               </li>

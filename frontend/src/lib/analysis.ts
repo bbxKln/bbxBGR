@@ -106,7 +106,7 @@ export function filterSessions(sessions: GameSession[], games: Game[], filters: 
 
 // ---------- 汇总 ----------
 
-/** 每位玩家的 场次/胜场/胜率（只含在筛选后场次中出场过的玩家，按玩家列表顺序） */
+/** 每位玩家的 场次/胜场/胜率（只含在筛选后场次中出场过的玩家，按胜率降序） */
 export function summarizePlayers(sessions: GameSession[], players: Player[]): PlayerSummary[] {
   const playerIds = new Set(players.map((p) => p.id))
   const acc = new Map<string, { played: number; wins: number }>()
@@ -132,13 +132,7 @@ export function summarizePlayers(sessions: GameSession[], players: Player[]): Pl
       winRate: stat.played > 0 ? stat.wins / stat.played : 0,
     })
   }
-  return result
-}
-
-/** 筛选后场次中出现过的桌游（按桌游列表顺序） */
-export function gamesInSessions(sessions: GameSession[], games: Game[]): Game[] {
-  const ids = new Set(sessions.map((s) => s.gameId))
-  return games.filter((g) => ids.has(g.id))
+  return result.sort((a, b) => b.winRate - a.winRate || b.played - a.played)
 }
 
 // ---------- 按月趋势 ----------
@@ -207,24 +201,38 @@ export function perPlayerPerGame(sessions: GameSession[], games: Game[], playerI
       wins: stat.wins,
       winRate: stat.wins / stat.played,
     }))
-    .sort((a, b) => b.winRate - a.winRate || b.played - a.played || a.gameName.localeCompare(b.gameName, 'zh'))
+    .sort((a, b) => b.winRate - a.winRate || b.played - a.played)
 }
 
-/** 玩家 × 桌游矩阵：行 = 玩家汇总，列 = 桌游，单元格 = 该玩家在该桌游的数据（未参与为 null） */
-export function playerGameMatrix(
-  sessions: GameSession[],
-  games: Game[],
-  players: Player[],
-): { players: PlayerSummary[]; games: Game[]; cells: Map<string, PlayerGameRow | null> } {
-  const summaries = summarizePlayers(sessions, players)
-  const gamesSeen = gamesInSessions(sessions, games)
-  const cells = new Map<string, PlayerGameRow | null>()
-  for (const player of summaries) {
-    for (const row of perPlayerPerGame(sessions, games, player.playerId)) {
-      cells.set(`${player.playerId}:${row.gameId}`, row)
+export interface NamedWinRateRow {
+  name: string
+  winRate: number
+  wins: number
+  played: number
+}
+
+/** 某个桌游下每位玩家的胜率（按胜率降序、场次降序、姓名排序） */
+export function perGamePlayerStats(sessions: GameSession[], players: Player[], gameId: string): NamedWinRateRow[] {
+  const playersById = new Map(players.map((p) => [p.id, p]))
+  const acc = new Map<string, { played: number; wins: number }>()
+  for (const s of sessions) {
+    if (s.gameId !== gameId) continue
+    const winners = new Set(s.winners.map((w) => w.playerId))
+    for (const p of s.participants) {
+      const cur = acc.get(p.playerId) ?? { played: 0, wins: 0 }
+      cur.played += 1
+      if (winners.has(p.playerId)) cur.wins += 1
+      acc.set(p.playerId, cur)
     }
   }
-  return { players: summaries, games: gamesSeen, cells }
+  return [...acc.entries()]
+    .map(([playerId, stat]) => ({
+      name: playersById.get(playerId)?.name ?? '未知玩家',
+      winRate: stat.wins / stat.played,
+      wins: stat.wins,
+      played: stat.played,
+    }))
+    .sort((a, b) => b.winRate - a.winRate || b.played - a.played)
 }
 
 /** 胜率百分比显示（四舍五入到整数） */

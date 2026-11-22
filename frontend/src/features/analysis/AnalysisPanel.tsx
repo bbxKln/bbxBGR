@@ -8,8 +8,6 @@ import {
   filterSessions,
   formatWinRate,
   monthlyTrend,
-  perPlayerPerGame,
-  playerGameMatrix,
   presetRange,
   summarizePlayers,
   type AnalysisFilters,
@@ -48,7 +46,6 @@ export function AnalysisPanel({ group }: { group: GroupDetail }) {
   const [gameIds, setGameIds] = useState<string[]>([])
   const [tagNames, setTagNames] = useState<string[]>([])
   const [playerIds, setPlayerIds] = useState<string[]>([])
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
 
   const sessions = sessionsQuery.data ?? EMPTY_SESSIONS
   const games = gamesQuery.data ?? EMPTY_GAMES
@@ -66,8 +63,7 @@ export function AnalysisPanel({ group }: { group: GroupDetail }) {
     }
   }, [preset, customFrom, customTo, gameIds, tagNames, playerIds])
 
-  const hasActiveFilters =
-    preset !== 'all' || gameIds.length > 0 || tagNames.length > 0 || playerIds.length > 0
+  const hasActiveFilters = preset !== 'all' || gameIds.length > 0 || tagNames.length > 0 || playerIds.length > 0
 
   const resetFilters = () => {
     setPreset('all')
@@ -81,13 +77,6 @@ export function AnalysisPanel({ group }: { group: GroupDetail }) {
   const filtered = useMemo(() => filterSessions(sessions, games, filters), [sessions, games, filters])
   const summary = useMemo(() => summarizePlayers(filtered, players), [filtered, players])
   const trend = useMemo(() => monthlyTrend(filtered, players), [filtered, players])
-  const matrix = useMemo(() => playerGameMatrix(filtered, games, players), [filtered, games, players])
-
-  const activePlayerId = summary.some((p) => p.playerId === selectedPlayerId)
-    ? selectedPlayerId
-    : (summary[0]?.playerId ?? null)
-  const activePlayer = players.find((p) => p.id === activePlayerId) ?? null
-  const activeBars = activePlayerId ? perPlayerPerGame(filtered, games, activePlayerId) : []
 
   const tagPool = useMemo(() => [...new Set(games.flatMap((g) => g.tags))].sort(), [games])
 
@@ -186,7 +175,7 @@ export function AnalysisPanel({ group }: { group: GroupDetail }) {
         </div>
       ) : (
         <>
-          {/* 汇总 */}
+          {/* 汇总（胜率降序） */}
           <div>
             <div className="mb-2 flex items-baseline justify-between">
               <h3 className="text-sm font-medium text-ink">汇总</h3>
@@ -223,89 +212,6 @@ export function AnalysisPanel({ group }: { group: GroupDetail }) {
               <p className="text-sm text-muted">没有可展示的趋势数据</p>
             ) : (
               <LineChart data={trend} />
-            )}
-          </div>
-
-          {/* 玩家 × 桌游 */}
-          <div>
-            <h3 className="mb-2 text-sm font-medium text-ink">玩家 × 桌游</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[24rem] text-sm">
-                <thead>
-                  <tr className="border-b border-line text-xs text-muted">
-                    <th className="py-2 pr-3 text-left font-medium">玩家</th>
-                    {matrix.games.map((g) => (
-                      <th key={g.id} className="whitespace-nowrap px-2 py-2 text-right font-medium">
-                        {g.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {matrix.players.map((p) => {
-                    const isActive = p.playerId === activePlayerId
-                    return (
-                      <tr key={p.playerId} className={`border-b border-line/60 transition-colors ${isActive ? 'bg-primary/5' : ''}`}>
-                        <td className="py-2 pr-3">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPlayerId(p.playerId)}
-                            className={`text-left hover:text-primary ${isActive ? 'font-medium text-primary' : 'text-ink'}`}
-                          >
-                            {p.name}
-                          </button>
-                        </td>
-                        {matrix.games.map((g) => {
-                          const cell = matrix.cells.get(`${p.playerId}:${g.id}`)
-                          if (!cell) {
-                            return (
-                              <td key={g.id} className="px-2 py-2 text-right text-muted/40">
-                                —
-                              </td>
-                            )
-                          }
-                          return (
-                            <td
-                              key={g.id}
-                              className="whitespace-nowrap px-2 py-2 text-right tabular-nums text-ink"
-                              style={{
-                                background: `color-mix(in srgb, var(--viz-cell-tint) ${14 + Math.round(cell.winRate * 44)}%, transparent)`,
-                              }}
-                            >
-                              {formatWinRate(cell.winRate)}
-                              <span className="ml-1 text-xs text-muted">
-                                {cell.wins}/{cell.played}
-                              </span>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* 选中玩家的各桌游胜率（横条） */}
-            {activePlayer && activeBars.length > 0 && (
-              <div className="mt-4 rounded-xl border border-line bg-surface p-3.5">
-                <p className="mb-3 text-sm font-medium text-ink">{activePlayer.name} 的各桌游胜率</p>
-                <div className="space-y-2.5">
-                  {activeBars.map((row) => (
-                    <div key={row.gameId} className="flex items-center gap-3">
-                      <span className="w-24 shrink-0 truncate text-sm text-ink" title={row.gameName}>
-                        {row.gameName}
-                      </span>
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-bg">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${row.winRate * 100}%` }} />
-                      </div>
-                      <span className="w-28 shrink-0 text-right text-xs tabular-nums text-muted">
-                        {formatWinRate(row.winRate)} · {row.wins}/{row.played}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             )}
           </div>
         </>

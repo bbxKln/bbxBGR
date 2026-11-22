@@ -3,10 +3,9 @@ import type { Game, GameSession, Player } from '../types'
 import {
   filterSessions,
   formatWinRate,
-  gamesInSessions,
   monthlyTrend,
+  perGamePlayerStats,
   perPlayerPerGame,
-  playerGameMatrix,
   presetRange,
   summarizePlayers,
 } from './analysis'
@@ -85,6 +84,15 @@ describe('summarizePlayers', () => {
     const summary = summarizePlayers(sessions, [players[0]])
     expect(summary).toHaveLength(1)
   })
+
+  it('按胜率降序排序', () => {
+    const summary = summarizePlayers(sessions, players)
+    // p2 100% > p3 50% > p1 33.3%
+    expect(summary.map((s) => s.playerId)).toEqual(['p2', 'p3', 'p1'])
+    const rates = summary.map((s) => s.winRate)
+    expect(rates[0]).toBeGreaterThanOrEqual(rates[1])
+    expect(rates[1]).toBeGreaterThanOrEqual(rates[2])
+  })
 })
 
 describe('filterSessions', () => {
@@ -150,7 +158,7 @@ describe('monthlyTrend', () => {
   })
 })
 
-describe('perPlayerPerGame / playerGameMatrix / gamesInSessions', () => {
+describe('perPlayerPerGame', () => {
   it('玩家在各桌游的胜率按胜率降序', () => {
     const rows = perPlayerPerGame(sessions, games, 'p1')
     expect(rows.map((r) => r.gameName)).toEqual(['卡坦岛', '阿瓦隆'])
@@ -158,21 +166,23 @@ describe('perPlayerPerGame / playerGameMatrix / gamesInSessions', () => {
     expect(rows[1].winRate).toBe(0)
   })
 
-  it('矩阵包含玩家行与桌游列，未参与组合无单元格', () => {
-    const matrix = playerGameMatrix(sessions, games, players)
-    expect(matrix.players.map((p) => p.playerId)).toEqual(['p1', 'p2', 'p3'])
-    expect(matrix.games.map((g) => g.name)).toEqual(['卡坦岛', '阿瓦隆'])
-    expect(matrix.cells.get('p1:g1')?.played).toBe(2)
-    expect(matrix.cells.get('p2:g2')?.winRate).toBe(1)
-    // 去掉 s1（p2 参与 g1 的那场）后，p2:g1 无单元格
-    const withoutS1 = playerGameMatrix([sessions[1], sessions[2]], games, players)
-    expect(withoutS1.cells.get('p2:g1')).toBeUndefined()
-    expect(withoutS1.cells.get('p2:g2')?.winRate).toBe(1)
+  it('空数据返回空数组', () => {
+    expect(perPlayerPerGame([], games, 'p1')).toEqual([])
+  })
+})
+
+describe('perGamePlayerStats', () => {
+  it('某个桌游下各玩家胜率按胜率降序', () => {
+    const rows = perGamePlayerStats(sessions, players, 'g1')
+    // g1：小乙 100%（1/1）、小丙 100%（1/1）、阿伦 50%（1/2）
+    expect(rows.map((r) => r.name)).toEqual(['小乙', '小丙', '阿伦'])
+    expect(rows.map((r) => r.winRate)).toEqual([1, 1, 0.5])
+    expect(rows[2].wins).toBe(1)
+    expect(rows[2].played).toBe(2)
   })
 
-  it('gamesInSessions 只返回出场过的桌游', () => {
-    const seen = gamesInSessions([sessions[0]], games)
-    expect(seen.map((g) => g.id)).toEqual(['g1'])
+  it('该桌游无场次时返回空数组', () => {
+    expect(perGamePlayerStats(sessions, players, 'g-missing')).toEqual([])
   })
 })
 

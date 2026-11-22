@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  /* 现代简约 · 冷色 · 克制 */
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-line: #e5e8ed;
+  --color-ink: #161c26;
+  --color-muted: #667085;
+  --color-primary: #2e5fcc;
+  --color-primary-hover: #254fab;
+  --color-win: #15965a;
+  --color-danger: #c23b3b;
+  --font-sans:
+    "Inter", "PingFang SC", "Noto Sans SC", "Hiragino Sans GB",
+    "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #10151c;
+    --color-surface: #171e28;
+    --color-line: #27303d;
+    --color-ink: #e7ecf3;
+    --color-muted: #8a94a6;
+    --color-primary: #5b8def;
+    --color-primary-hover: #6e9cf2;
+    --color-win: #3fbf7f;
+    --color-danger: #e06a6a;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

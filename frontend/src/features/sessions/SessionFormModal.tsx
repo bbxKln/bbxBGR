@@ -79,7 +79,7 @@ export function SessionFormModal({
 
   return (
     <Modal open={open} onClose={onClose} title={session ? '编辑场次' : '新增场次'}>
-      <form onSubmit={onSubmit} className="max-h-[75vh] space-y-4 overflow-y-auto pr-1">
+      <form onSubmit={onSubmit} className="space-y-4">
         {error && <Alert>{error}</Alert>}
         <div>
           <label htmlFor="session-game" className="mb-1.5 block text-sm font-medium text-ink">

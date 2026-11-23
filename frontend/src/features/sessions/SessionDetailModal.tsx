@@ -77,7 +77,7 @@ export function SessionDetailModal({
 
   return (
     <Modal open={open} onClose={onClose} title={session.gameName}>
-      <div className="max-h-[75vh] space-y-4 overflow-y-auto pr-1">
+      <div className="space-y-4">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted">{formatDate(session.playedAt)}</span>
           <span className="text-xs text-muted">由 {session.createdByName} 记录</span>

@@ -7,6 +7,7 @@
     {
       "binding": "DB",
       "database_name": "bbxbgr-db",
+      "database_id": "bbec47dd-da76-4e53-a632-37ba9082e63d",
       "migrations_dir": "migrations"
     }
   ],

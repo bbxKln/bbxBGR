@@ -98,19 +98,21 @@ export interface AdminInfo {
   username: string
 }
 
-export interface AdminGroupRow {
+export interface AdminSessionRow {
   id: string
-  name: string
-  groupId: string
-  memberCount: number
-  sessionCount: number
-  lastActiveAt: string | null
+  playedAt: string
   createdAt: string
+  groupName: string
+  gameName: string
+  participants: string[]
+  winners: string[]
+  commentCount: number
 }
 
 export interface AdminStats {
   totalUsers: number
   totalGroups: number
   totalSessions: number
-  groups: AdminGroupRow[]
+  /** 最近 50 条场次纪录（按创建时间倒序） */
+  sessions: AdminSessionRow[]
 }

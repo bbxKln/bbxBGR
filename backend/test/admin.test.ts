@@ -18,9 +18,28 @@ beforeAll(async () => {
 })
 
 describe('运营后台', () => {
-  it('普通用户登录后台 → 403；运营账号可登录并查看统计', async () => {
+  it('普通用户登录后台 → 403；运营账号可登录并查看统计（场次纪录维度）', async () => {
     const normal = await register(uniqueName('路人'))
-    await createGroup(normal, '统计用群组')
+    const group = await createGroup(normal, '统计用群组')
+    // 建一场，验证场次纪录出现在统计中
+    const gameRes = await apiFetch(`/api/v1/groups/${group.id}/games`, {
+      method: 'POST',
+      body: JSON.stringify({ name: '卡坦岛', tags: [] }),
+      cookie: normal.cookie,
+    })
+    const { game } = (await gameRes.json()) as { game: { id: string } }
+    const playersRes = await apiFetch(`/api/v1/groups/${group.id}/players`, { cookie: normal.cookie })
+    const { players } = (await playersRes.json()) as { players: { id: string; name: string }[] }
+    await apiFetch(`/api/v1/groups/${group.id}/sessions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        gameId: game.id,
+        playedAt: '2026-11-23',
+        participantIds: players.map((p) => p.id),
+        winnerIds: [players[0].id],
+      }),
+      cookie: normal.cookie,
+    })
 
     const normalLogin = await apiFetch('/api/v1/admin/login', {
       method: 'POST',
@@ -50,12 +69,21 @@ describe('运营后台', () => {
     const stats = await apiFetch('/api/v1/admin/stats', { cookie })
     expect(stats.status).toBe(200)
     const data = (await stats.json()) as {
-      stats: { totalUsers: number; totalGroups: number; totalSessions: number; groups: { name: string; memberCount: number }[] }
+      stats: {
+        totalUsers: number
+        totalGroups: number
+        totalSessions: number
+        sessions: { groupName: string; gameName: string; participants: string[]; winners: string[] }[]
+      }
     }
     expect(data.stats.totalUsers).toBeGreaterThanOrEqual(2)
     expect(data.stats.totalGroups).toBeGreaterThanOrEqual(1)
-    expect(data.stats.totalSessions).toBe(0)
-    expect(data.stats.groups.map((g) => g.name)).toContain('统计用群组')
+    expect(data.stats.totalSessions).toBeGreaterThanOrEqual(1)
+    const latest = data.stats.sessions[0]
+    expect(latest.groupName).toBe('统计用群组')
+    expect(latest.gameName).toBe('卡坦岛')
+    expect(latest.participants).toHaveLength(1)
+    expect(latest.winners).toEqual(latest.participants)
   })
 
   it('普通用户访问后台接口 → 404（隐藏存在）；未登录 → 401', async () => {

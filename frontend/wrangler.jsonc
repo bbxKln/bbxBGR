@@ -1,12 +1,21 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bbxbgr-web",
+  "main": "worker.ts",
   "compatibility_date": "2026-11-19",
   "observability": {
     "enabled": true
   },
+  "services": [
+    {
+      "binding": "API",
+      "service": "bbxbgr-api"
+    }
+  ],
   "assets": {
     "directory": "dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
     "not_found_handling": "single-page-application"
   }
 }

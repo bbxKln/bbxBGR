@@ -5,7 +5,7 @@ import { Alert, Button, Input, Spinner } from '../components/ui'
 import { api, ApiError } from '../lib/api'
 import type { AdminInfo } from '../types'
 import { NotFoundPage } from './NotFoundPage'
-import { formatDateTime } from '../lib/validation'
+import { formatDate } from '../lib/validation'
 
 /** 运营后台：独立运营账号登录（role=operator），普通用户视为 404 */
 export function AdminPage() {
@@ -139,33 +139,42 @@ function AdminDashboard({ admin, onLogout }: { admin: AdminInfo; onLogout: () =>
               <StatTile label="总场次数" value={stats.totalSessions} />
             </div>
 
-            <h2 className="mb-2 mt-8 text-sm font-medium text-ink">群组列表</h2>
-            {stats.groups.length === 0 ? (
-              <p className="text-sm text-muted">还没有群组</p>
+            <div className="mb-2 mt-8 flex items-baseline justify-between">
+              <h2 className="text-sm font-medium text-ink">场次纪录</h2>
+              <p className="text-xs text-muted">最近 50 条</p>
+            </div>
+            {stats.sessions.length === 0 ? (
+              <p className="text-sm text-muted">还没有场次记录</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[36rem] text-sm">
+                <table className="w-full min-w-[44rem] text-sm">
                   <thead>
                     <tr className="border-b border-line text-xs text-muted">
-                      <th className="py-2 pr-3 text-left font-medium">群组</th>
-                      <th className="px-2 py-2 text-left font-medium">群组 ID</th>
-                      <th className="px-2 py-2 text-right font-medium">成员</th>
-                      <th className="px-2 py-2 text-right font-medium">场次</th>
-                      <th className="px-2 py-2 text-right font-medium">最近活跃</th>
-                      <th className="py-2 pl-2 text-right font-medium">创建时间</th>
+                      <th className="py-2 pr-3 text-left font-medium">游玩时间</th>
+                      <th className="px-2 py-2 text-left font-medium">群组</th>
+                      <th className="px-2 py-2 text-left font-medium">桌游</th>
+                      <th className="px-2 py-2 text-left font-medium">参与玩家</th>
+                      <th className="px-2 py-2 text-left font-medium">获胜玩家</th>
+                      <th className="py-2 pl-2 text-right font-medium">评论</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {stats.groups.map((group) => (
-                      <tr key={group.id} className="border-b border-line/60">
-                        <td className="py-2 pr-3 text-ink">{group.name}</td>
-                        <td className="px-2 py-2 font-mono tabular-nums text-muted">{group.groupId}</td>
-                        <td className="px-2 py-2 text-right tabular-nums text-muted">{group.memberCount}</td>
-                        <td className="px-2 py-2 text-right tabular-nums text-muted">{group.sessionCount}</td>
-                        <td className="px-2 py-2 text-right text-muted">
-                          {group.lastActiveAt ? formatDateTime(group.lastActiveAt) : '—'}
+                    {stats.sessions.map((session) => (
+                      <tr key={session.id} className="border-b border-line/60">
+                        <td className="py-2 pr-3 whitespace-nowrap text-ink">{formatDate(session.playedAt)}</td>
+                        <td className="px-2 py-2 text-muted">{session.groupName}</td>
+                        <td className="px-2 py-2 text-ink">{session.gameName}</td>
+                        <td className="max-w-48 px-2 py-2 text-muted">
+                          <span className="line-clamp-1" title={session.participants.join('、')}>
+                            {session.participants.join('、')}
+                          </span>
                         </td>
-                        <td className="py-2 pl-2 text-right text-muted">{formatDateTime(group.createdAt)}</td>
+                        <td className="max-w-48 px-2 py-2 text-win">
+                          <span className="line-clamp-1" title={session.winners.join('、')}>
+                            {session.winners.join('、')}
+                          </span>
+                        </td>
+                        <td className="py-2 pl-2 text-right tabular-nums text-muted">{session.commentCount}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -43,7 +43,10 @@
 - 前端数据层：`src/lib/api/http.ts` 直连 `/api/v1`；本地开发经 Vite 代理转发到 wrangler dev（**端口 8788**，8787 被用户其他项目占用）
 - 本地开发：后端 `cd backend && npm run db:apply && npm run dev`；测试 `npm test`（vitest 集成测试，miniflare 隔离存储）
 - 运营后台：`/admin` 路由 + 独立运营账号（role=operator）；初始化账号 `cd backend && npm run seed:operator -- <用户名> <密码>`；普通用户访问显示 404
-- 部署：前端 Workers 静态资产，后端独立 Worker；测试链接用 *.pages.dev（M5 部署）
+- 部署（M5 已上线）：前端 Workers 静态资产 bbxbgr-web（worker.ts 用 service binding 转发 /api 到 bbxbgr-api，run_worker_first）；后端 Worker bbxbgr-api + 远程 D1 bbxbgr-db（id: bbec47dd-da76-4e53-a632-37ba9082e63d）；站点 https://bbxbgr-web.boxerwang715.workers.dev
+- 部署命令：`cd backend && npx wrangler deploy`；`cd frontend && npm run build && npx wrangler deploy`；迁移 `npx wrangler d1 migrations apply bbxbgr-db --remote`；运营账号 `npm run seed:operator -- <用户名> <密码> --remote`
+- 注意：Worker 内部不能 fetch *.workers.dev 子请求（会得到占位 404），必须用 service binding
+- CI：GitHub Actions（.github/workflows/ci.yml）— 前端 tsc+单测+构建、后端 tsc+集成测试；E2E 仅本地跑（需 wrangler dev + 浏览器）
 - 视觉：现代简约风（冷色、克制、商务感）+ 深浅色可手动切换（默认跟随系统，选择持久化）
 - 删除策略：软删除，历史场次保留引用并显示原名称
 - 测试：前端 Vitest 单测 + Playwright E2E（双 webServer：5173 + 8788）；后端 Vitest 集成测试（cloudflare vitest 插件，含权限矩阵）；里程碑结束测试全绿才汇报

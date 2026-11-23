@@ -5,14 +5,15 @@ import { createSession } from './auth'
 import { fail } from '../lib/errors'
 import { verifyPassword } from '../lib/auth'
 
-interface AdminStatsGroup {
+interface AdminStatsSession {
   id: string
-  name: string
-  groupId: string
-  memberCount: number
-  sessionCount: number
-  lastActiveAt: string | null
+  playedAt: string
   createdAt: string
+  groupName: string
+  gameName: string
+  participants: string[]
+  winners: string[]
+  commentCount: number
 }
 
 /** 运营后台：独立运营账号（role=operator），普通用户访问视为不存在（404） */
@@ -45,30 +46,50 @@ export const adminRoutes = new Hono<{ Bindings: Env }>()
     const totalUsers = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM users').first<{ n: number }>()
     const totalGroups = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM groups').first<{ n: number }>()
     const totalSessions = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM sessions').first<{ n: number }>()
-    const groupRows = await c.env.DB.prepare(
-      `SELECT g.id, g.name, g.group_id, g.created_at,
-              (SELECT COUNT(*) FROM memberships m WHERE m.group_id = g.id) AS member_count,
-              (SELECT COUNT(*) FROM sessions s WHERE s.group_id = g.id) AS session_count,
-              (SELECT MAX(s.created_at) FROM sessions s WHERE s.group_id = g.id) AS last_active_at
-       FROM groups g ORDER BY g.created_at DESC`,
+
+    // 场次纪录：最近 50 条（按创建时间倒序），含群组/桌游/玩家名与评论数
+    const sessionRows = await c.env.DB.prepare(
+      `SELECT s.id, s.played_at, s.created_at, s.participant_ids, s.winner_ids,
+              g.name AS group_name, ga.name AS game_name
+       FROM sessions s
+       JOIN groups g ON g.id = s.group_id
+       LEFT JOIN games ga ON ga.id = s.game_id
+       ORDER BY s.created_at DESC
+       LIMIT 50`,
     ).all<{
       id: string
-      name: string
-      group_id: string
+      played_at: string
       created_at: string
-      member_count: number
-      session_count: number
-      last_active_at: string | null
+      participant_ids: string
+      winner_ids: string
+      group_name: string
+      game_name: string | null
     }>()
+    const playerRows = await c.env.DB.prepare('SELECT id, name FROM players').all<{ id: string; name: string }>()
+    const names = new Map(playerRows.results.map((p) => [p.id, p.name]))
+    const commentCounts = await c.env.DB.prepare('SELECT session_id, COUNT(*) AS n FROM comments GROUP BY session_id').all<{
+      session_id: string
+      n: number
+    }>()
+    const commentCountMap = new Map(commentCounts.results.map((r) => [r.session_id, r.n]))
+    const parseIds = (raw: string): string[] => {
+      try {
+        const parsed = JSON.parse(raw)
+        return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
+      } catch {
+        return []
+      }
+    }
 
-    const groups: AdminStatsGroup[] = groupRows.results.map((row) => ({
+    const sessions: AdminStatsSession[] = sessionRows.results.map((row) => ({
       id: row.id,
-      name: row.name,
-      groupId: row.group_id,
-      memberCount: row.member_count,
-      sessionCount: row.session_count,
-      lastActiveAt: row.last_active_at,
+      playedAt: row.played_at,
       createdAt: row.created_at,
+      groupName: row.group_name,
+      gameName: row.game_name ?? '已删除的桌游',
+      participants: parseIds(row.participant_ids).map((id) => names.get(id) ?? '未知玩家'),
+      winners: parseIds(row.winner_ids).map((id) => names.get(id) ?? '未知玩家'),
+      commentCount: commentCountMap.get(row.id) ?? 0,
     }))
 
     return c.json({
@@ -76,7 +97,7 @@ export const adminRoutes = new Hono<{ Bindings: Env }>()
         totalUsers: totalUsers?.n ?? 0,
         totalGroups: totalGroups?.n ?? 0,
         totalSessions: totalSessions?.n ?? 0,
-        groups,
+        sessions,
       },
     })
   })

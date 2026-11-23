@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import { Spinner } from './components/ui'
 import { AdminPage } from './pages/AdminPage'
+import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { GroupPage } from './pages/GroupPage'
 import { LobbyPage } from './pages/LobbyPage'
 import { LoginPage } from './pages/LoginPage'
@@ -44,6 +45,14 @@ export default function App() {
         }
       />
       <Route path="/admin" element={<AdminPage />} />
+      <Route
+        path="/change-password"
+        element={
+          <Protected>
+            <ChangePasswordPage />
+          </Protected>
+        }
+      />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

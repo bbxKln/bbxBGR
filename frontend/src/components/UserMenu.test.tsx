@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '../auth/AuthContext'
 import { UserMenu } from './UserMenu'
@@ -19,9 +20,11 @@ function renderMenu() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <UserMenu />
-      </AuthProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <UserMenu />
+        </AuthProvider>
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -41,30 +44,12 @@ describe('UserMenu', () => {
     expect(screen.getByRole('menuitem', { name: '退出登录' })).toBeInTheDocument()
   })
 
-  it('菜单中可打开修改密码弹窗', async () => {
+  it('修改密码跳转到独立页面', async () => {
     const user = userEvent.setup()
     renderMenu()
 
     await user.click(await screen.findByRole('button', { name: /测试用户/ }))
-    await user.click(screen.getByRole('menuitem', { name: '修改密码' }))
-
-    expect(await screen.findByRole('dialog', { name: '修改密码' })).toBeInTheDocument()
-    expect(screen.getByLabelText('当前密码')).toBeInTheDocument()
-    expect(screen.getByLabelText('新密码')).toBeInTheDocument()
-    expect(screen.getByLabelText('确认新密码')).toBeInTheDocument()
-  })
-
-  it('两次新密码不一致时提示', async () => {
-    const user = userEvent.setup()
-    renderMenu()
-
-    await user.click(await screen.findByRole('button', { name: /测试用户/ }))
-    await user.click(screen.getByRole('menuitem', { name: '修改密码' }))
-    await user.type(await screen.findByLabelText('当前密码'), 'secret123')
-    await user.type(screen.getByLabelText('新密码'), 'newsecret1')
-    await user.type(screen.getByLabelText('确认新密码'), 'different1')
-    await user.click(screen.getByRole('button', { name: '保存' }))
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('两次输入的新密码不一致')
+    const item = screen.getByRole('menuitem', { name: '修改密码' })
+    expect(item).toHaveAttribute('href', '/change-password')
   })
 })

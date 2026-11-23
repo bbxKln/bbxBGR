@@ -204,7 +204,7 @@ export function Modal({
       aria-label={title}
     >
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
-      <div className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col rounded-xl border border-line bg-surface p-5 shadow-lg">
+      <div className="relative flex max-h-[calc(100dvh_-_2rem)] w-full max-w-md flex-col rounded-xl border border-line bg-surface p-5 shadow-lg">
         <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
           <h2 className="min-w-0 truncate text-base font-semibold text-ink">{title}</h2>
           <button

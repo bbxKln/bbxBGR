@@ -20,20 +20,22 @@ test('用户菜单：查看用户 ID、修改密码、用新密码登录', async
   const userId = (await page.locator('code').innerText()).trim()
   expect(userId.length).toBeGreaterThan(0)
 
-  // 修改密码：先输错当前密码 → 报错
+  // 修改密码（独立页面）：先输错当前密码 → 报错
   await page.getByRole('menuitem', { name: '修改密码' }).click()
-  await expect(page.getByRole('dialog', { name: '修改密码' })).toBeVisible()
+  await expect(page).toHaveURL(/\/change-password$/)
+  await expect(page.getByRole('heading', { name: '修改密码' })).toBeVisible()
   await page.getByLabel('当前密码', { exact: true }).fill('wrong-pass')
   await page.getByLabel('新密码', { exact: true }).fill('newsecret1')
   await page.getByLabel('确认新密码', { exact: true }).fill('newsecret1')
   await page.getByRole('button', { name: '保存', exact: true }).click()
   await expect(page.getByRole('alert')).toHaveText(/当前密码不正确/)
 
-  // 输入正确的当前密码 → 修改成功
+  // 输入正确的当前密码 → 修改成功 → 返回大厅
   await page.getByLabel('当前密码', { exact: true }).fill('secret123')
   await page.getByRole('button', { name: '保存', exact: true }).click()
-  await expect(page.getByText('密码已修改')).toBeVisible()
-  await page.getByRole('button', { name: '完成' }).click()
+  await expect(page.getByRole('heading', { name: '密码已修改' })).toBeVisible()
+  await page.getByRole('button', { name: '返回大厅' }).click()
+  await expect(page).toHaveURL(/\/$/)
 
   // 退出，旧密码登录失败、新密码成功
   await page.locator('header').getByRole('button', { name: new RegExp(name) }).click()

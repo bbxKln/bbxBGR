@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { ChangePasswordModal } from './ChangePasswordModal'
 import { Button } from './ui'
 
 /** 右上角用户菜单：用户信息（含用户 ID）、修改密码、退出登录 */
 export function UserMenu() {
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
-  const [changePwOpen, setChangePwOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -86,17 +85,14 @@ export function UserMenu() {
             </div>
           </div>
           <div className="mt-3 space-y-0.5 border-t border-line pt-2">
-            <button
-              type="button"
+            <Link
+              to="/change-password"
               role="menuitem"
-              onClick={() => {
-                setOpen(false)
-                setChangePwOpen(true)
-              }}
-              className="w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-ink transition-colors hover:bg-bg"
+              onClick={() => setOpen(false)}
+              className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-ink transition-colors hover:bg-bg"
             >
               修改密码
-            </button>
+            </Link>
             <button
               type="button"
               role="menuitem"
@@ -108,8 +104,6 @@ export function UserMenu() {
           </div>
         </div>
       )}
-
-      <ChangePasswordModal open={changePwOpen} onClose={() => setChangePwOpen(false)} />
     </div>
   )
 }

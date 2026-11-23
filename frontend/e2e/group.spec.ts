@@ -89,7 +89,7 @@ test('M2 全流程：桌游/玩家/场次/评论/权限/软删除', async ({ pag
   await logout(page, nameA)
   await expect(page).toHaveURL(/\/login$/)
   await register(page, nameB)
-  await page.locator('main').getByRole('button', { name: '按群组 ID 加入' }).click()
+  await page.locator('main').getByRole('button', { name: '按群组 ID 加入' }).first().click()
   await page.getByLabel('群组 ID').fill(groupId)
   await page.getByRole('button', { name: '加入', exact: true }).click()
   await page.getByRole('button', { name: '完成' }).click()

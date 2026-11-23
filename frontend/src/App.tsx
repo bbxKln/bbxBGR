@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import { Spinner } from './components/ui'
+import { AdminPage } from './pages/AdminPage'
 import { GroupPage } from './pages/GroupPage'
 import { LobbyPage } from './pages/LobbyPage'
 import { LoginPage } from './pages/LoginPage'
@@ -42,6 +43,7 @@ export default function App() {
           </Protected>
         }
       />
+      <Route path="/admin" element={<AdminPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

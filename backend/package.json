@@ -1,0 +1,25 @@
+{
+  "name": "bbxbgr-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "bbxBGR 桌游场次纪录应用后端（Cloudflare Workers + Hono + D1）",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed:operator": "node scripts/seed-operator.mjs",
+    "db:apply": "wrangler d1 migrations apply bbxbgr-db --local"
+  },
+  "dependencies": {
+    "hono": "^4.13.21"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.9.0",
+    "@cloudflare/workers-types": "^5.20261123.1",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.166.0"
+  }
+}

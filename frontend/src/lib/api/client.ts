@@ -1,4 +1,6 @@
 import type {
+  AdminInfo,
+  AdminStats,
   Game,
   GameInput,
   GameSession,
@@ -64,6 +66,11 @@ export interface Api {
   upsertMyComment(groupId: string, sessionId: string, content: string): Promise<SessionComment | null>
   /** admin/admin_user 删除任意评论 */
   deleteComment(groupId: string, sessionId: string, commentId: string): Promise<void>
+
+  /** 运营后台（仅 role=operator 账号可用，普通用户 404） */
+  adminLogin(input: { username: string; password: string }): Promise<AdminInfo>
+  adminMe(): Promise<AdminInfo>
+  adminStats(): Promise<AdminStats>
 }
 
 /** 角色显示名 */

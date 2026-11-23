@@ -59,7 +59,7 @@ test('注册 → 创建群组 → 换账号凭群组 ID 加入', async ({ page }
   await expect(page).toHaveURL(/\/$/)
 
   // 凭群组 ID 加入
-  await page.locator('main').getByRole('button', { name: '按群组 ID 加入' }).click()
+  await page.locator('main').getByRole('button', { name: '按群组 ID 加入' }).first().click()
   await page.getByLabel('群组 ID').fill(groupId)
   await page.getByRole('button', { name: '加入', exact: true }).click()
   await expect(page.getByText('已加入群组')).toBeVisible()
@@ -67,7 +67,7 @@ test('注册 → 创建群组 → 换账号凭群组 ID 加入', async ({ page }
   await expect(page.getByText('周五桌游夜')).toBeVisible()
 
   // 加入一个不存在的 ID → 提示错误
-  await page.locator('main').getByRole('button', { name: '按群组 ID 加入' }).click()
+  await page.locator('main').getByRole('button', { name: '按群组 ID 加入' }).first().click()
   await page.getByLabel('群组 ID').fill('99999999')
   await page.getByRole('button', { name: '加入', exact: true }).click()
   await expect(page.getByRole('alert')).toHaveText(/群组不存在/)

@@ -92,3 +92,25 @@ export interface SessionComment {
   /** 当前用户是否可删除（admin/admin_user 或本人） */
   canDelete: boolean
 }
+
+export interface AdminInfo {
+  id: string
+  username: string
+}
+
+export interface AdminGroupRow {
+  id: string
+  name: string
+  groupId: string
+  memberCount: number
+  sessionCount: number
+  lastActiveAt: string | null
+  createdAt: string
+}
+
+export interface AdminStats {
+  totalUsers: number
+  totalGroups: number
+  totalSessions: number
+  groups: AdminGroupRow[]
+}

@@ -20,20 +20,28 @@ test('M3 分析页：胜率计算、趋势、矩阵与筛选', async ({ page }) 
   await page.getByRole('link', { name: /分析局/ }).click()
   await expect(page.getByRole('heading', { name: '分析局' })).toBeVisible()
 
-  // 两个桌游（带标签）
+  // 两个桌游（带标签）：卡坦岛手动输入，阿瓦隆点选已有标签
   await page.getByRole('tab', { name: '桌游' }).click()
-  for (const [gameName, tag] of [
-    ['卡坦岛', '策略'],
-    ['阿瓦隆', '聚会'],
-  ]) {
-    await page.getByRole('button', { name: '新增桌游' }).click()
-    await page.getByLabel('名称').fill(gameName)
-    const tagInput = page.locator('#game-tags')
-    await tagInput.fill(tag)
-    await tagInput.press('Enter')
-    await page.getByRole('button', { name: '保存', exact: true }).click()
-    await expect(page.getByRole('dialog')).toBeHidden()
-  }
+  await page.getByRole('button', { name: '新增桌游' }).click()
+  await page.getByLabel('名称').fill('卡坦岛')
+  const tagInput = page.locator('#game-tags')
+  await tagInput.fill('策略')
+  await tagInput.press('Enter')
+  await page.getByRole('button', { name: '保存', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeHidden()
+
+  await page.getByRole('button', { name: '新增桌游' }).click()
+  await page.getByLabel('名称').fill('阿瓦隆')
+  // 手动输入一个，再点选已有标签「策略」
+  await tagInput.fill('聚会')
+  await tagInput.press('Enter')
+  await expect(page.getByText('已有标签（点击添加）')).toBeVisible()
+  await page.getByRole('button', { name: '添加已有标签 策略' }).click()
+  await page.getByRole('button', { name: '保存', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeHidden()
+  const avalonCard = page.locator('li').filter({ hasText: '阿瓦隆' })
+  await expect(avalonCard.getByText('策略')).toBeVisible()
+  await expect(avalonCard.getByText('聚会')).toBeVisible()
 
   // 无名玩家
   await page.getByRole('tab', { name: '玩家' }).click()
